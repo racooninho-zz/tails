@@ -30,7 +30,10 @@ class Order(tornado.web.RequestHandler):
         prices = json.loads(self.request.body)
         total_value = 0
         total_vat = 0
+        order_details2 ={}
         for item in prices['order']['items']:
+            order_details = {}
+
             product_id = item['product_id']
             quantity = item['quantity']
             details = get_price_vat(product_id)
@@ -38,7 +41,11 @@ class Order(tornado.web.RequestHandler):
             total_value += quantity * details['price']
             total_vat += (quantity * details['price']) * applicable_vat
 
-        self.finish({"order": int(round(total_value)), "VAT": int(round(total_vat)), "Total": int(round(total_value)+int(round(total_vat))})
+            order_details.update({'total': quantity * details['price'],
+                                  "vat": (quantity * details['price']) * applicable_vat})
+            key = 'product_id_'+ str(item['product_id'])
+            order_details2.update({key: order_details})
+        self.finish({"total_order": total_value, "total_vat": round(total_vat, 3), "total_with_vat": total_value+total_vat, "order_details": order_details2})
 
 
 tornado_routes = [
