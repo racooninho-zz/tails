@@ -38,7 +38,7 @@ class Order(tornado.web.RequestHandler):
             total_value += quantity * details['price']
             total_vat += (quantity * details['price']) * applicable_vat
 
-        self.finish({"order": total_value, "VAT": round(total_vat, 2), "Total": total_value+total_vat})
+        self.finish({"order": int(round(total_value)), "VAT": int(round(total_vat)), "Total": int(round(total_value)+int(round(total_vat))})
 
 
 tornado_routes = [
