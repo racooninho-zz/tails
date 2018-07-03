@@ -37,14 +37,15 @@ class Order(tornado.web.RequestHandler):
             product_id = item['product_id']
             quantity = item['quantity']
             details = get_price_vat(product_id)
-            applicable_vat = get_vat_bands(details['vat'])
-            total_value += quantity * details['price']
-            total_vat += (quantity * details['price']) * applicable_vat
+            if details:
+                applicable_vat = get_vat_bands(details['vat'])
+                total_value += quantity * details['price']
+                total_vat += (quantity * details['price']) * applicable_vat
 
-            order_details.update({'total': quantity * details['price'],
-                                  "vat": (quantity * details['price']) * applicable_vat})
-            key = 'product_id_'+ str(item['product_id'])
-            order_details2.update({key: order_details})
+                order_details.update({'total': quantity * details['price'],
+                                      "vat": (quantity * details['price']) * applicable_vat})
+                key = 'product_id_'+ str(item['product_id'])
+                order_details2.update({key: order_details})
         self.finish({"total_order": total_value, "total_vat": round(total_vat, 3), "total_with_vat": total_value+total_vat, "order_details": order_details2})
 
 
