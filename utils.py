@@ -1,8 +1,8 @@
-# External imports
-
 from expiringdict import ExpiringDict
 import json
 import requests
+
+
 with open('prices.json') as f:
     data = json.load(f)
 
@@ -10,16 +10,17 @@ cache = ExpiringDict(max_len=200, max_age_seconds=3600)
 
 
 def get_price_vat(product_id, source_dictionary):
-    try:
-        return list(filter(lambda details: details['product_id'] == product_id, source_dictionary))
-    except Exception:
-        return None
+    result = filter(lambda details: details['product_id'] == product_id, source_dictionary)
+    return list(result)
+
+
 
 def get_conversion_rate_from_api(currency):
     if cache.get(currency):
         return cache.get(currency)
     else:
-        try: #in case you try to run the application without internet connection
+        # in case you try to run the application without internet connection
+        try:
             url = 'https://free.currencyconverterapi.com/api/v5/convert?q=GBP_' + currency + '&compact=ultra'
             result_from_api = requests.get(url)
 
@@ -38,7 +39,9 @@ def get_conversion_rate_from_api(currency):
 def get_conversion_currency(prices):
     currency = "GBP"
     conversion_rate = 1
+    # deals with case that the currency parameter does not match any
     try:
+        # check if the request has a currency parameter
         if 'currency' in prices['order']:
             currency = prices['order']['currency']
             conversion_rate = get_conversion_rate_from_api(currency)
@@ -61,12 +64,17 @@ def get_vat_bands(bands):
         return 0
 
 
-def prepare_details(complete_order_details, conversion, item, total_value_no_vat, vat_value):
+def prepare_details(complete_order_details, conversion, individual_item, total_value_no_vat, vat_value):
+    #
     individual_order_details = {}
-    product_id = item['product_id']
-    quantity = item['quantity']
-    details = get_price_vat(product_id, data['prices'])[0]  # check if product exists in the prices.json
-    if details:
+    product_id = individual_item['product_id']
+    quantity = individual_item['quantity']
+
+    # check if product exists in the prices.json
+
+    details = get_price_vat(product_id, data['prices'])
+    if details != []:
+        details = details[0]
         applicable_vat = get_vat_bands(details['vat_band'])
 
         total_value_item_no_vat = get_int_round_value((quantity * details['price']) * conversion)
@@ -79,8 +87,9 @@ def prepare_details(complete_order_details, conversion, item, total_value_no_vat
                                          "vat": vat_item})
 
         complete_order_details.append(individual_order_details)
-    return total_value_no_vat, vat_value, complete_order_details
-
+        return total_value_no_vat, vat_value, complete_order_details
+    else:
+        return None
 
 def get_int_round_value(number):
 

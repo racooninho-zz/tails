@@ -21,10 +21,12 @@ class Order(tornado.web.RequestHandler):
 
         conversion, currency = utils.get_conversion_currency(prices_dictionary)
 
-        for item in prices_dictionary['order']['items']:
-            total_value_no_vat, vat_value, complete_order_details = utils.prepare_details(complete_order_details,
-                                                                                          conversion,item,
-                                                                                          total_value_no_vat, vat_value)
+        for individual_item in prices_dictionary['order']['items']:
+
+            result = utils.prepare_details(complete_order_details, conversion, individual_item,
+                                           total_value_no_vat, vat_value)
+            if result:
+                total_value_no_vat, vat_value, complete_order_details = result
 
         self.write({"order_id": prices_dictionary['order']['id'],
                     "currency": currency,

@@ -1,8 +1,8 @@
 import unittest
 import json
-import main
 import os
 import utils
+
 
 def get_request_files(file):
     cur_path = os.path.dirname(__file__)
